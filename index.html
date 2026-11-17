@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<!-- необходимые элементы страницы -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Феникс</title>
+<!-- Шрифты -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+/* 1. Настройки: цвета, шрифт и тд */
+:root {
+  --black: #000000;
+  --orange: #FF7A1A;       /* Акцентирующий цвет, для выделения важного текста */
+  --white: #FFFFFF;
+  --dim: rgba(255,255,255,.62);   /* цвет для текста технического (лишь для подсказок пользователю)*/
+  --radius: 15px;                 /* закругление у кнопок */
+  --font-title: 'Lora', Georgia, serif;
+  --font-text: 'Manrope', -apple-system, 'Helvetica Neue', sans-serif;
+}
+
+/*  2. Основа  */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--black); color: var(--white); }
+body {
+  font-family: var(--font-text);
+  font-size: 17px; line-height: 1.55;
+  
+  padding: env(safe-area-inset-top) 22px calc(env(safe-area-inset-bottom) + 28px);
+  max-width: 480px; margin: 0 auto;
+}
+
+/* 3. Страницы  */
+.page { display: none; min-height: 100dvh; padding: 48px 0 32px; flex-direction: column; }
+.page.active { display: flex; animation: pageIn .6s ease both; }
+.page.center { justify-content: center; }   /* вертикальное положение */
+@keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
+
+h1, h2 { font-family: var(--font-title); font-weight: 600; line-height: 1.25; margin: 0 0 20px; }
+h1 { font-size: 30px; }
+h2 { font-size: 26px; }
+.hint { color: var(--dim); margin: 0 0 24px; }
+
+/*  4. Кнопки */
+.btn {
+  display: block; width: 100%;
+  font: 600 17px var(--font-text);
+  padding: 16px 18px; margin-top: 14px;
+  border-radius: var(--radius);           
+  border: 2px solid var(--orange);
+  background: transparent; color: var(--white);
+  cursor: pointer; transition: background .2s, color .2s, opacity .3s;
+}
+.btn:active { background: var(--orange); color: var(--black); }
+.btn.primary { background: var(--orange); color: var(--black); }  /* окрас кнопки с пустотой внутри */
+.btn:disabled { opacity: .35; border-color: var(--dim); cursor: default; }  
+.btn.selected { background: var(--orange); color: var(--black); }         
+
+input[type=text], input[type=time] {
+  width: 100%; font: 17px var(--font-text);   /* Размер заголовка*/
+  padding: 16px 18px; border-radius: var(--radius);
+  border: 2px solid var(--white); background: var(--black); color: var(--white);
+  outline: none;
+}
+input:focus { border-color: var(--orange); }
+.error { color: var(--orange); min-height: 24px; margin: 10px 0 0; }
+.shake { animation: shake .4s; }
+@keyframes shake { 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+
+/* 5. Страница 2: функционал */
+.reveal-text {
+  max-height: 0; opacity: 0; overflow: hidden;     /* видимость кнопки */
+  transition: opacity 1.6s ease, max-height 1.2s ease;
+  white-space: pre-line;                         
+  color: var(--white);
+}
+.reveal-text.shown { max-height: 4000px; opacity: 1; padding: 16px 4px 8px; }
+#next2 { display: none; }   /* появление кнопки для перехода*/
+
+/* ===================== 6. страница 3: настройки ===================== */
+.step { display: none; margin-top: 28px; }
+.step.show { display: block; animation: pageIn .6s ease both; }
+.row { display: flex; gap: 12px; }
+.row .btn { margin-top: 0; }
+#next3 { display: none; }
+
+/* 7. страница 4 текст */
+.letter { white-space: pre-line; }
+
+/* ===================== 8. страница 5: пульс сердца ===================== */
+.heart { width: 96px; height: 96px; margin: 40px auto 0; animation: beat 1.3s infinite ease-in-out; }
+.heart svg { width: 100%; height: 100%; fill: var(--orange); filter: drop-shadow(0 0 18px rgba(255,122,26,.6)); }
+@keyframes beat { 0%,100%{transform:scale(1)} 15%{transform:scale(1.2)} 30%{transform:scale(1)} 45%{transform:scale(1.15)} 60%{transform:scale(1)} }
+.final { font-family: var(--font-title); font-size: 24px; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .heart, .page.active, .step.show { animation: none; } }
+</style>
+</head>
+<body>
+
+<!-- страница 1: пароль -->
+<section class="page center active" id="p1">
+  <h1>Привет, Настен!</h1>
+  <!-- отображаемая информация и реакция на неправильный пароль -->
+  <p class="hint">Я называю тебя именем одной птицы — есть и вид фильмов с таким названием</p>
+  <input type="text" id="pass" placeholder="Введи слово" autocomplete="off" autocapitalize="none" autocorrect="off">
+  <p class="error" id="err"></p>
+  <button class="btn primary" id="go1">Продолжить</button>
+</section>
+
+<!-- страница 2: появление пунктов и функционал -->
+<section class="page" id="p2">
+  <h2>Выбери, что прочитать</h2>
+
+ 
+  <button class="btn reveal-btn" data-target="t1">Что я чувствую, когда я с тобой</button>
+  <div class="reveal-text" id="t1">Я чувствую полное умиротворение и душевное спокойствие, смешанное с ускоренным сердцебиением и теплыми мыслями. Чувствую себя самым счастливым человеком на свете</div>
+
+  <button class="btn reveal-btn" data-target="t2">Почему я тебя люблю</button>
+  <div class="reveal-text" id="t2">1) Ты умная
+2) Отрытая
+3) Прямолинейная
+4) Смелая когда это реально необходимо
+5) Видишь красоту во многом в этом мире
+6) Мотивируешь каждый день становится лучше себя вчерашнего
+7) Даешь надежду что всё будет хорошо и я, нет, мы справимся со всеми невзгодами вместе
+8)Ты красивая, как звездное небо летом в лесу
+9) Остановишь когда собираюсь делать глупость
+10) Умеешь успокоить меня и знаешь как это сделать
+11) С тобою я чувствую себя самым счастливым человеком за последние 5 млрд лет
+12) Мило улыбаешься
+13) С тобою я чувствую спокойствие
+14) Находишь темы для разговоров
+15) Подскажешь ответ даже на самые глупые вопросы
+16) Мило спишь и просыпаешься)))
+17) Умеешь сострадать другим и хочешь им помочь
+Я могу долго продолжать, но тогда пунктов будет почти 100 хаха</div>
+
+  <button class="btn reveal-btn" data-target="t3">Кто ты для меня</button>
+  <div class="reveal-text" id="t3">Самый дорогой человек, ради которого готов встать поздно ночью, приехать куда угодно. Самая любимая девушка, от которой я не отрывал бы глаз. Самая лучшая в этом мире и за которую я готов встать против всего мира, заведя тебя за спину. Чтобы никакая мразь тебя не пугала и ты знала, что я приеду и избавлю от страха</div>
+
+  <button class="btn reveal-btn" data-target="t4">Почему «феникс»?</button>
+  <div class="reveal-text" id="t4">Всё просто, ты всегда после проблем или ситуаций когда почти затухаешь. После небольшого отдыха, загораешься новым ярким пламенем. Ты освещаешь мне путь в тонеле бед и угроз, греешь сердце моё даже когда на улице метель а я в одной кофте.</div>
+
+  <!-- появление кнопки -->
+  <button class="btn primary" id="next2">Следующая страница</button>
+</section>
+
+<!-- === страница 3 === -->
+<section class="page" id="p3">
+  <h2>Увидимся ли мы завтра?</h2>
+  <div class="row">
+    <button class="btn" id="yes">Да</button>
+    <button class="btn" id="no">Нет</button>
+  </div>
+
+  <!-- реакция на нажатие кнопки ДА -->
+  <div class="step" id="timeStep">
+    <p class="hint">Во сколько?</p>
+    <input type="time" id="time">
+    <button class="btn primary" id="timeNext">Далее</button>
+  </div>
+
+  <!-- реакция на нажатие кнопки НЕТ -->
+  <div class="step" id="noStep">
+    <p class="hint">Почему?</p>
+    <input type="text" id="reason" placeholder="Напиши здесь" autocomplete="off">
+    <button class="btn primary" id="noNext" style="display:none">Далее</button>  
+  </div>
+
+  <div class="step" id="doStep">
+    <h2>Чем займёмся?</h2>
+    <p class="hint">Выбери 1–2 варианта</p>
+    <!-- меню выбора -->
+    <button class="btn opt">Выпьем кофе</button>
+    <button class="btn opt">Покурим</button>
+    <button class="btn opt">Пообнимаемся</button>
+    <button class="btn opt">Просто поболтаем</button>
+    <button class="btn opt">Поцелую тебя в щёчку</button>
+    <button class="btn primary" id="next3">Следующая страница</button>
+  </div>
+</section>
+
+<!-- страница 4 длинный текст -->
+<section class="page" id="p4">
+  
+  <div class="letter">Здравствуй, моя дорогая Настя.
+Я тебя люблю всем сердцем и решил таким вот хах странным образом выразить снова свою любовь. Времена ныне не простые, из за чего нам трудно часто видеться и меня это печалит сильнее всего. Но я ценю каждую минуту проведенную с тобою, каждое твоё слово. И твоё мнение самое важное для меня.
+
+Хаха я четко не могу вспомнить наше самое первое знакомство, когда я пришел в библиотеку ещё мелким. Но ты видела все мои этапы взросления и составления личности человека, которым являюсь сейчас. И я тебе благодарен, что ты появилась в моей жизни, что связали друг друга взаимными чувствами и любовью. Которую никто не сможет разрушить, взломать или испортить. Ты самая ценная для меня, и знай, что даже когда я лицом не весел. Я всегда рад тебя видеть, слышать и чувствовать.
+
+Да, я не самый идеальный и не самый красивый или умный, но ты меня любишь таким. Какой я есть, и для меня это очень ценно. Как и твоё мнение, желание и так далее. И я всегда готов и хочу помочь, если с тобою случилась беда. Быть рядом и поддерживать тебя в трудные минуты. Ведь ты самая лучшая в этой жизни, и если бы меня спросили: Кому ты бы доверил свою жизнь? Я бы ответил: моей любимой, не повторимой Анастасии, фениксу моему. И я хочу делать тебя счастливой и видеть твою улыбку и как можно меньше уставала.
+
+Я люблю тебя, обнимаю и целую. Твой любимый Потапушка <span style="color:var(--orange)">♥</span></div>
+  <button class="btn primary" id="next4">Далее</button>
+</section>
+
+<!-- страница 5 текст и анимация -->
+<section class="page center" id="p5">
+  <p class="final">Я люблю тебя, и даже в киберпространстве я рядом с тобой. Я думаю о тебе каждый день, каждый час.</p>
+  <div class="heart">
+    <!-- ебучее сердце -->
+    <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+  </div>
+</section>
+
+<script>
+/* настройки */
+const PASSWORD = 'феникс';                    
+const TG_BOT_TOKEN = '8544163395:AAFQgxjY4vOEg4lgIRZE67enW3jR_feoqks';
+const TG_CHAT_ID   = '1204045436';
+
+/* навигация */
+function show(id) {                            
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+const $ = id => document.getElementById(id);
+
+/* проверка пароля на странице 1 */
+function checkPass() {
+  const v = $('pass').value.trim().toLowerCase().replace(/ё/g, 'е');
+  if (v === PASSWORD.replace(/ё/g, 'е')) { show('p2'); }
+  else {
+    $('err').textContent = 'Не то слово. Попробуй ещё раз';
+    $('pass').classList.remove('shake'); void $('pass').offsetWidth; $('pass').classList.add('shake');
+  }
+}
+$('go1').onclick = checkPass;
+$('pass').addEventListener('keydown', e => { if (e.key === 'Enter') checkPass(); });
+
+
+document.querySelectorAll('.reveal-btn').forEach(btn => {
+  btn.onclick = () => {
+    $(btn.dataset.target).classList.add('shown');  
+    btn.disabled = true;                           
+    $('next2').style.display = 'block';            
+  };
+});
+$('next2').onclick = () => show('p3');
+
+let answer = '', time = '', reason = '';
+const chosen = [];                                 
+
+$('yes').onclick = () => {
+  answer = 'Да';
+  $('yes').classList.add('selected'); $('no').classList.remove('selected');
+  $('noStep').classList.remove('show');           
+  $('timeStep').classList.add('show');
+};
+$('no').onclick = () => {
+  answer = 'Нет'; time = '';
+  $('no').classList.add('selected'); $('yes').classList.remove('selected');
+  $('timeStep').classList.remove('show');
+  $('noStep').classList.add('show');               
+};
+
+$('reason').addEventListener('input', () => {
+  $('noNext').style.display = $('reason').value.trim() ? 'block' : 'none';
+});
+$('noNext').onclick = () => {
+  reason = $('reason').value.trim();
+  sendTG('Она ответила «Нет» на «Увидимся завтра?». Её текст:\n' + reason);   
+  show('p4');                                    
+};
+$('timeNext').onclick = () => {
+  if (!$('time').value) { $('time').focus(); return; }   
+  time = $('time').value;
+  $('doStep').classList.add('show');
+  $('doStep').scrollIntoView({ behavior: 'smooth' });
+};
+
+document.querySelectorAll('.opt').forEach(b => {
+  b.onclick = () => {
+    const t = b.textContent, i = chosen.indexOf(t);
+    if (i > -1) { chosen.splice(i, 1); b.classList.remove('selected'); }          
+    else if (chosen.length < 2) { chosen.push(t); b.classList.add('selected'); } 
+    $('next3').style.display = chosen.length ? 'block' : 'none';
+  };
+});
+
+
+// отправка отчета вбот тг
+function sendTG(text) {
+  if (!TG_BOT_TOKEN || !TG_CHAT_ID) return;
+  fetch('https://api.telegram.org/bot' + TG_BOT_TOKEN + '/sendMessage', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+    body: JSON.stringify({ chat_id: TG_CHAT_ID, text: text })
+  }).catch(() => {});
+}
+
+let sent = false;                                  
+$('next3').onclick = () => {
+  if (!sent) {
+    sent = true;
+    sendTG('Ответы:\nУвидимся завтра: ' + answer + (time ? '\nВремя: ' + time : '') +
+           '\nЧто будем делать: ' + chosen.join(', '));
+  }
+  show('p4');                                     
+};
+
+$('next4').onclick = () => show('p5');
+</script>
+</body>
+</html>
